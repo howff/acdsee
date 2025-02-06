@@ -34,7 +34,7 @@ dbfread gives unknown field type 7
 
 pybase3 gives unknown field type B
 
-# Other woftware
+# Other software
 
 This can convert the ACDSee XML files:
 https://github.com/jannisborn/pyacddb
@@ -49,7 +49,7 @@ https://github.com/Emil-AC/ACDSee-Orphanage
 NAME,FOLDER_ID,FILE_TP_ID,SIZE,WIDTH,HEIGHT,BPP,IMAGE_TYPE,NUM_PAGES,ISREADONLY,ISHIDDEN,HASASAUDIO,HASEMCPROF,HASEXIFSCN,SORT_ORDER,CAPTION,RATING,NOTES,AUTHOR,FTMODIFIED,FTCREATED,FTACCESSED,ACDDATE,EXIFDATE,LMTSCNCMPL,RECCREDATE,CRC,ATTRS,RPP,RAWDATE,RPPUSED,ISTHMBROT,TAGGED,RSVDBOOL1,RSVDBOOL2,RSVDBOOL3,RSVDMEMO1,RSVDINT1,RSVDINT2,RSVDINT3,ACDDBUPOFF,HASACDDBSC,IMGEDITED,DEVELOPED,ACDONLINE,ACDDBLMT,MDDIRTY,LABEL,GEOLUNDONE,SNAPSHOTS,ISORPHAN,ISREMOTE,LMTFACESCN,FACEEBDPD,LMTKEKWSCN,ASSET_ID,TS
 
 * NAME is the filename
-* FOLDER_ID is the directory path id, see Folder.dbf
+* FOLDER_ID is the directory, see Folder.dbf
 * RATING is the rating number 1 to 5
 * ACDDBUPOFF seems to indicate whether the file has metadata to be embedded (pending)
 
@@ -57,3 +57,7 @@ NAME,FOLDER_ID,FILE_TP_ID,SIZE,WIDTH,HEIGHT,BPP,IMAGE_TYPE,NUM_PAGES,ISREADONLY,
 
 NAME,FOLD_RT_ID,PRNT_ID,FOLDR_TYPE,IS_EXCLUDE,LASTSCANDT,LAST_PLUS,ATTRS,SORT,ISSORTREV,GROUPSET,ISGROUPREV,GROUPRES,FOLDER_ID,TS
 
+* FOLDER_ID is the id of the folder,
+* PRNT_ID is the id of the parent folder
+
+To construct a file path you need to follow all the PRNT_ID until you reach the root folder.
