@@ -19,7 +19,9 @@
 # Add a 'date copied' field to the CSV
 # Use a database like sqlite not a CSV?
 
+import argparse
 import csv
+from datetime import datetime
 import os
 import re
 import shutil
@@ -108,7 +110,22 @@ def find_files_to_copy(db):
     return files_to_copy, bytes_to_copy
 
 # ---------------------------------------------------------------------
+parser = argparse.ArgumentParser(description='syncthing wrapper')
+parser.add_argument('-v', '--verbose', action="store_true", help='verbose')
+parser.add_argument('--copy', action="store_true", help='actually perform the copy (otherwise only lists what will be copied)')
+parser.add_argument('--log', action="store", help='store progress in the given log file')
+args = parser.parse_args()
+
+if args.log:
+    logfd = open(args.log, 'a')
+else:
+    logfd = open('/dev/null', 'w')
+
+timenow = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+print('%s Starting' % timenow)
+
 print('READING DATABASE')
+print('LOAD %s' % database, file=logfd)
 db = read_database()
 
 print('FIND FILES TO COPY')
@@ -121,14 +138,22 @@ for file in files_to_copy:
     dirs_to_copy.add(dire)
 
 for dire in dirs_to_copy:
-    print('COPY %s' % dire)
+    print('COPYDIR %s' % dire)
+    print('COPYDIR %s' % dire, file=logfd)
 print("Total size to copy = %f MB" % (bytes_to_copy / 1024 / 1024))
+print("Total size to copy = %f MB" % (bytes_to_copy / 1024 / 1024), file=logfd)
+
+if not args.copy:
+    timenow = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+    print('%s Finished' % timenow)
+    sys.exit(0)
 
 print('CREATE DIRECTORIES')
 for dire in dirs_to_copy:
     #print(destdir)
     #print(dire)
     #print('MKDIR %s' % os.path.join(destdir, dire))
+    print('MKDIR %s' % os.path.join(destdir, dire), file=logfd)
     os.makedirs(os.path.join(destdir, dire), exist_ok=True)
 
 print('COPY')
@@ -136,9 +161,18 @@ for file in files_to_copy:
     dire = relative_dir_to_src(file)
     dire = os.path.join(destdir, dire)
     print('COPY %s -> %s' % (file,dire))
+    print('COPY %s -> %s' % (file,dire), logfd)
     shutil.copy2(file, dire)
 
 print('UPDATE DATABASE')
+print('UPDATE %s' % database, file=logfd)
 with open(database, 'a') as fd:
     for dire in dirs_to_copy:
-        print(dire, file=fd)
+        # Not properly writing as CSV, need to quote paths containing comma,
+        if ',' in dire:
+            print('"%s"' % dire, file=fd)
+        else:
+            print('%s' % dire, file=fd)
+
+timenow = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+print('%s Finished' % timenow)
