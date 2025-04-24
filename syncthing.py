@@ -119,7 +119,7 @@ def find_files_to_copy(db):
 
     prevprinted=None
     for root, dirs, files in os.walk(srcdir):
-        if dir_prefix and root == dir_prefix:
+        if dir_prefix and (root == srcdir):
             dirs[:] = [d for d in dirs if d.startswith(dir_prefix)]
         for name in files:
             # Ignore if an ACDSee backup directory
