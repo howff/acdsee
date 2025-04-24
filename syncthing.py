@@ -92,7 +92,7 @@ def read_database(database):
             # override the earlier ones, which is handy because they
             # probably contain a more recent updateddate (although we
             # don't actually check the date, but we could).
-            db[row['path']] = time.strptime(row['updateddate'], '%Y-%m-%d')
+            db[row['path']] = time.mktime(time.strptime(row['updateddate'], '%Y-%m-%d'))
     return db
 
 def test_read_database():
@@ -129,39 +129,43 @@ def find_files_to_copy(db):
             if (not name.endswith('.JPG')) and (not name.endswith('.jpg')):
                 continue
             # Ignore if too old
-            if time_now - os.path.getmtime(fullpath) > 86400 * max_days:
+            fullpath = os.path.join(root, name)
+            filestat = os.stat(fullpath)
+            if (time_now - filestat.st_mtime) > (86400 * max_days):
                 if debug: print('IGNORE_TOO_OLD %s' % fullpath)
                 continue
-            # Ignore if this directory has already been copied.
-            # Unless the file has been modified since the directory was last copied.
-            fullpath = os.path.join(root, name)
+            # Ignore if this directory has already been copied,
+            # unless the file has been modified since the directory was last copied.
             dire = relative_dir_to_src(fullpath)
             if dire in db:
-                if os.path.getmtime(fullpath) < db[dire]:
+                if filestat.st_mtime < db[dire]:
                     if debug: print('IGNORE_ALREADY_SYNCED %s on %s via %s' % (fullpath, db[dire], dire))
                     continue
             # Ignore if too small or too large
-            filesize = os.path.getsize(fullpath)
-            if filesize < min_size or filesize > max_size:
+            if filestat.st_size < min_size or filestat.st_size > max_size:
                 if debug: print('IGNORE_TOO_SMALL %s' % fullpath)
                 continue
             # Ignore if not rated 1..5 in ACDSee
+            # This check is last because it involves reading the whole file.
             rating = image_rating(fullpath)
             if not rating:
                 if debug: print('IGNORE_NOT_RATED %s' % fullpath)
                 continue
             # Add to list
             files_to_copy += [fullpath]
-            bytes_to_copy += filesize
+            bytes_to_copy += filestat.st_size
+            if debug: print('ADD_FILE %s' % fullpath)
             # Display directory if not already displayed
             if dire != prevprinted:
-                print('ADD %s' % os.path.dirname(fullpath)+'   ', end='\r')
+                print('ADD_DIR %s' % os.path.dirname(fullpath)+'   ')
                 prevprinted = dire
     return files_to_copy, bytes_to_copy
 
 
 # ---------------------------------------------------------------------
 def main():
+    global debug, verbose
+
     parser = argparse.ArgumentParser(description='syncthing wrapper')
     parser.add_argument('-d', '--debug', action="store_true", help='debug')
     parser.add_argument('-v', '--verbose', action="store_true", help='verbose')
