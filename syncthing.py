@@ -33,13 +33,13 @@ import time
 
 debug=False
 verbose=False
-#srcdir="/mnt/cifs/pictures/ixus"
-srcdir="/mnt/cifs/backup_ro/dell9500_backup/Pictures"
+srcdir="/mnt/cifs/pictures/ixus"
+srcdir_laptop="/mnt/cifs/backup_ro/dell9500_backup/Pictures"
 destdir="/mnt/cifs/pictures/Pixel_Camera_Sync"
-max_days=250           # don't sync anything older than max_days
+max_days=2000          # don't sync anything older than max_days
 min_size=1024          # probably not an image
 max_size=100*1024*1024 # 100MB is too large for an image
-dir_prefix='202'       # Use 202 for 2020 onwards, or None to include all dirs and subdirs
+dir_prefix=None        # Use 202 for 2020 onwards, or None to include all dirs and subdirs
 database="synced.csv"
 
 
@@ -138,9 +138,12 @@ def find_files_to_copy(db):
             # unless the file has been modified since the directory was last copied.
             dire = relative_dir_to_src(fullpath)
             if dire in db:
+                #print('DIR_IS_IN_DB %s' % dire)
                 if filestat.st_mtime < db[dire]:
                     if debug: print('IGNORE_ALREADY_SYNCED %s on %s via %s' % (fullpath, db[dire], dire))
                     continue
+            #else:
+            #    print('DIR_IS_NOT_IN_DB %s' % dire)
             # Ignore if too small or too large
             if filestat.st_size < min_size or filestat.st_size > max_size:
                 if debug: print('IGNORE_TOO_SMALL %s' % fullpath)
@@ -165,16 +168,27 @@ def find_files_to_copy(db):
 # ---------------------------------------------------------------------
 def main():
     global debug, verbose
+    global srcdir, max_days, dir_prefix
 
     parser = argparse.ArgumentParser(description='syncthing wrapper')
-    parser.add_argument('-d', '--debug', action="store_true", help='debug')
-    parser.add_argument('-v', '--verbose', action="store_true", help='verbose')
+    parser.add_argument('-d', '--debug', action="store_true", help='debug (very detailed, explain each file)')
+    parser.add_argument('-v', '--verbose', action="store_true", help='verbose (no extra info right now)')
     parser.add_argument('--copy', action="store_true", help='actually perform the copy (otherwise only list what will be copied)')
     parser.add_argument('--log', action="store", help='store progress in the given log file')
+    parser.add_argument('--laptop', action="store_true", help='copy from laptop backup instead of file server')
+    parser.add_argument('--days', action="store", help=f'only copy files modified within this many days (default {max_days})')
+    parser.add_argument('--prefix', action="store", help=f'only copy inside directories with this prefix, e.g. 2021 (default {dir_prefix})')
     args = parser.parse_args()
 
     if args.debug: debug=True
     if args.verbose: verbose=True
+
+    if args.laptop:
+        srcdir = srcdir_laptop
+    if args.days:
+        max_days = int(args.days)
+    if args.prefix:
+        dir_prefix = args.prefix
 
     if args.log:
         logfd = open(args.log, 'a')
