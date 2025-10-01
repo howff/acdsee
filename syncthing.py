@@ -92,7 +92,9 @@ def read_database(database):
             # override the earlier ones, which is handy because they
             # probably contain a more recent updateddate (although we
             # don't actually check the date, but we could).
-            db[row['path']] = time.mktime(time.strptime(row['updateddate'], '%Y-%m-%d'))
+            # The DB doesn't store the time so pretend it's the end of the day
+            # so that files modified on the same day are ignored.
+            db[row['path']] = time.mktime(time.strptime(row['updateddate'], '%Y-%m-%d')) + (864399.0)
     return db
 
 def test_read_database():
@@ -132,32 +134,34 @@ def find_files_to_copy(db):
             fullpath = os.path.join(root, name)
             filestat = os.stat(fullpath)
             if (time_now - filestat.st_mtime) > (86400 * max_days):
-                if debug: print('IGNORE_TOO_OLD %s' % fullpath)
+                if debug: print(f'IGNORE_TOO_OLD {fullpath}')
                 continue
             # Ignore if this directory has already been copied,
             # unless the file has been modified since the directory was last copied.
             dire = relative_dir_to_src(fullpath)
-            if dire in db:
-                #print('DIR_IS_IN_DB %s' % dire)
-                if filestat.st_mtime < db[dire]:
-                    if debug: print('IGNORE_ALREADY_SYNCED %s on %s via %s' % (fullpath, db[dire], dire))
-                    continue
-            #else:
-            #    print('DIR_IS_NOT_IN_DB %s' % dire)
+            if (dire in db) and (filestat.st_mtime < db[dire]):
+                if debug:
+                    print(f'IGNORE_ALREADY_SYNCED {fullpath} on {db[dire]} via {dire}')
+                    print('  FILE %s' % datetime.fromtimestamp(filestat.st_mtime).strftime("%Y-%m-%d %H:%M:%S"))
+                    print('  DB   %s' % datetime.fromtimestamp(db[dire]).strftime("%Y-%m-%d %H:%M:%S"))
+                continue
             # Ignore if too small or too large
-            if filestat.st_size < min_size or filestat.st_size > max_size:
-                if debug: print('IGNORE_TOO_SMALL %s' % fullpath)
+            if filestat.st_size < min_size:
+                if debug: print(f'IGNORE_TOO_SMALL ({filestat.st_size}) {fullpath}')
+                continue
+            if filestat.st_size > max_size:
+                if debug: print(f'IGNORE_TOO_LARGE ({filestat.st_size}) {fullpath}')
                 continue
             # Ignore if not rated 1..5 in ACDSee
             # This check is last because it involves reading the whole file.
             rating = image_rating(fullpath)
             if not rating:
-                if debug: print('IGNORE_NOT_RATED %s' % fullpath)
+                if debug: print(f'IGNORE_NOT_RATED {fullpath}')
                 continue
             # Add to list
             files_to_copy += [fullpath]
             bytes_to_copy += filestat.st_size
-            if debug: print('ADD_FILE %s' % fullpath)
+            if debug: print(f'ADD_FILE {fullpath}')
             # Display directory if not already displayed
             if dire != prevprinted:
                 print('ADD_DIR %s' % os.path.dirname(fullpath)+'   ')
