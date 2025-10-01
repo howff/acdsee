@@ -61,3 +61,21 @@ NAME,FOLD_RT_ID,PRNT_ID,FOLDR_TYPE,IS_EXCLUDE,LASTSCANDT,LAST_PLUS,ATTRS,SORT,IS
 * PRNT_ID is the id of the parent folder
 
 To construct a file path you need to follow all the PRNT_ID until you reach the root folder.
+
+# Sample program using ACDSee database
+
+Copy files to a destination folder(*) which
+* have been tagged with any star rating in the ACDSee database
+* have not already been copied (unless their modification date is newer than the last copy)
+
+(*) the destination folder could be a backup, or it could be a synchronisation folder,
+for example for `syncthing` to replicate to another device.
+
+e.g.
+```
+./syncthing.py --log syncthing.log --days 99999 --prefix=2025-0 --laptop --copy
+```
+
+Add `--laptop` to copy from a different source directory.
+Add `--copy` to actually perform the copy otherwise only a dry-run listing is displayed.
+
