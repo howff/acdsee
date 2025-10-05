@@ -127,10 +127,17 @@ def find_files_to_copy(db):
             # Ignore if an ACDSee backup directory
             if '[Originals]' in root:
                 continue
-            # Ignore if not a JPEG file
-            if (not name.endswith('.JPG')) and (not name.endswith('.jpg')):
+            # Determine file type
+            if name.endswith('.JPG') or name.endswith('.jpg'):
+                filetype = 'JPEG'
+            elif name.endswith('.mp4.xmp'):
+                filetype = 'MP4'
+            else:
+                filetype = 'NONE'
+            # Ignore if not a JPEG file or MP4 XMP file
+            if filetype == 'NONE':
                 continue
-            # Ignore if too old
+            # Ignore if too old (for XMP applies to the XMP not the MP4)
             fullpath = os.path.join(root, name)
             filestat = os.stat(fullpath)
             if (time_now - filestat.st_mtime) > (86400 * max_days):
@@ -145,19 +152,24 @@ def find_files_to_copy(db):
                     print('  FILE %s' % datetime.fromtimestamp(filestat.st_mtime).strftime("%Y-%m-%d %H:%M:%S"))
                     print('  DB   %s' % datetime.fromtimestamp(db[dire]).strftime("%Y-%m-%d %H:%M:%S"))
                 continue
-            # Ignore if too small or too large
-            if filestat.st_size < min_size:
+            # Ignore if too small or too large (only applies to JPEG)
+            if (filetype == 'JPEG') and (filestat.st_size < min_size):
                 if debug: print(f'IGNORE_TOO_SMALL ({filestat.st_size}) {fullpath}')
                 continue
-            if filestat.st_size > max_size:
+            if (filetype == 'JPEG') and (filestat.st_size > max_size):
                 if debug: print(f'IGNORE_TOO_LARGE ({filestat.st_size}) {fullpath}')
                 continue
             # Ignore if not rated 1..5 in ACDSee
             # This check is last because it involves reading the whole file.
+            # For MP4 this reads the XMP file not the whole movie.
             rating = image_rating(fullpath)
             if not rating:
                 if debug: print(f'IGNORE_NOT_RATED {fullpath}')
                 continue
+            # For MP4 we now want the actual movie filename
+            if filetype == 'MP4':
+                fullpath = fullpath.replace('.xmp', '')
+                filestat = os.stat(fullpath)
             # Add to list
             files_to_copy += [fullpath]
             bytes_to_copy += filestat.st_size
