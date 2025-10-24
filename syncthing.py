@@ -61,9 +61,11 @@ def image_rating(filename):
         xmp_end = data.find(b'</x:xmpmeta')
         xmp_str = data[xmp_start:xmp_end+12]
         xmp_str = xmp_str.decode()
-        match = re.search('<acdsee:rating>(.)</acdsee:rating>', xmp_str)
+        match = re.search('<acdsee:rating>(.)</acdsee:rating>', xmp_str) # old XMP format
+        if not match:
+            match = re.search('acdsee:rating="(.)"', xmp_str) # new XMP format
         if match:
-            rating = match.group(1)
+            rating = match.group(1).replace('"', '')
             try:
                 rating = int(rating)
             except:

@@ -64,6 +64,64 @@ To construct a file path you need to follow all the PRNT_ID until you reach the 
 
 # Sample program using ACDSee database
 
+# ACDSee Rating
+
+Each image can have a rating which is a number 1 to 5. This is stored in the XMP metadata in the file (or in a separate .xmp file).
+
+In previous versions of ACDSee it was stored like this:
+```
+<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="XMP Core 5.5.0">
+ <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <rdf:Description rdf:about=""
+    xmlns:hdrgm="http://ns.adobe.com/hdr-gain-map/1.0/"
+    xmlns:xmpNote="http://ns.adobe.com/xmp/note/"
+    xmlns:GCamera="http://ns.google.com/photos/1.0/camera/"
+    xmlns:Container="http://ns.google.com/photos/1.0/container/"
+    xmlns:Item="http://ns.google.com/photos/1.0/container/item/"
+    xmlns:acdsee="http://ns.acdsee.com/iptc/1.0/"
+    xmlns:xmp="http://ns.adobe.com/xap/1.0/">
+   <hdrgm:Version>1.0</hdrgm:Version>
+   <xmpNote:HasExtendedXMP>5CFC0FC6E95C3D73662A2A2653F5E31A</xmpNote:HasExtendedXMP>
+   <acdsee:caption/>
+   <acdsee:datetime>2025-09-14T11:37:26.000</acdsee:datetime>
+   <acdsee:author/>
+   <acdsee:rating>3</acdsee:rating>
+   <acdsee:notes/>
+   <acdsee:tagged>False</acdsee:tagged>
+   <acdsee:categories/>
+   <acdsee:collections/>
+   <xmp:Rating>3</xmp:Rating>
+   <xmp:Label/>
+```
+In new versions of ACDSee it is stored like this:
+```
+<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="XMP Core 5.5.0">
+ <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <rdf:Description rdf:about=""
+    xmlns:hdrgm="http://ns.adobe.com/hdr-gain-map/1.0/"
+    xmlns:xmpNote="http://ns.adobe.com/xmp/note/"
+    xmlns:GCamera="http://ns.google.com/photos/1.0/camera/"
+    xmlns:Container="http://ns.google.com/photos/1.0/container/"
+    xmlns:Item="http://ns.google.com/photos/1.0/container/item/"
+    xmlns:acdsee="http://ns.acdsee.com/iptc/1.0/"
+    xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+   hdrgm:Version="1.0"
+   xmpNote:HasExtendedXMP="BA73CEF33DBB23D816D2ECDAD7247660"
+   acdsee:caption=""
+   acdsee:datetime="2025-10-15T18:38:42.000"
+   acdsee:author=""
+   acdsee:rating="3"
+   acdsee:notes=""
+   acdsee:tagged="False"
+   acdsee:categories=""
+   acdsee:collections=""
+   acdsee:metadataversion="10"
+   xmp:Rating="3"
+   xmp:Label="">
+```
+
+# Sample program using ACDSee rating
+
 Copy files to a destination folder(*) which
 * have been tagged with any star rating in the ACDSee database
 * have not already been copied (unless their modification date is newer than the last copy)
